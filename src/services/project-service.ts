@@ -29,6 +29,7 @@ export async function getProjectAnalytics(projectId: string, userId: string) {
   const member = await requireMember(project.workspaceId, userId);
 
   return getTaskAnalytics({
+    workspaceId: project.workspaceId,
     projectId: project.id,
     assigneeId: member.$id,
   });

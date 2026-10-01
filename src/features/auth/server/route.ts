@@ -7,6 +7,12 @@ import { zValidator } from "@hono/zod-validator";
 import { AUTH_COOKIE, GITHUB_STATE_COOKIE } from "../constants";
 import { loginSchema, registerSchema } from "../Schemas";
 import { GITHUB_EMAIL_ERROR, fetchGithubProfile, githubAuthorizeUrl } from "@/lib/github";
+import {
+  assertGithubCallbackAllowed,
+  assertLoginAllowed,
+  assertRegisterAllowed,
+  clientAddress,
+} from "@/lib/rate-limit";
 import { sessionCookieOptions } from "@/lib/session-cookie";
 import { ServiceError, rethrowServiceError } from "@/lib/service-error";
 import { sessionMiddleware } from "@/lib/session-middleware";
@@ -23,7 +29,9 @@ const route = new Hono()
   })
   .post("/login", zValidator("json", loginSchema), async (c) => {
     try {
-      const { token } = await loginUser(c.req.valid("json"));
+      const body = c.req.valid("json");
+      await assertLoginAllowed(body.email, requestIp(c));
+      const { token } = await loginUser(body);
       setCookie(c, AUTH_COOKIE, token, sessionCookieOptions());
       return c.json({ success: true });
     } catch (error) {
@@ -32,7 +40,9 @@ const route = new Hono()
   })
   .post("/register", zValidator("json", registerSchema), async (c) => {
     try {
-      const { token } = await registerUser(c.req.valid("json"));
+      const body = c.req.valid("json");
+      await assertRegisterAllowed(requestIp(c));
+      const { token } = await registerUser(body);
       setCookie(c, AUTH_COOKIE, token, sessionCookieOptions());
       return c.json({ success: true });
     } catch (error) {
@@ -70,12 +80,17 @@ const route = new Hono()
     }
 
     try {
+      await assertGithubCallbackAllowed(requestIp(c));
       const profile = await fetchGithubProfile(code);
       const { token } = await loginWithGithub(profile);
       deleteCookie(c, GITHUB_STATE_COOKIE, { path: "/" });
       setCookie(c, AUTH_COOKIE, token, sessionCookieOptions());
       return c.redirect("/");
     } catch (error) {
+      if (error instanceof ServiceError && error.status === 429) {
+        return fail("github_rate_limit");
+      }
+
       if (error instanceof ServiceError && error.message === GITHUB_EMAIL_ERROR) {
         return fail("github_email");
       }
@@ -91,6 +106,13 @@ const route = new Hono()
     deleteCookie(c, AUTH_COOKIE);
     return c.json({ success: true });
   });
+
+function requestIp(c: { req: { header: (name: string) => string | undefined } }) {
+  return clientAddress(
+    c.req.header("x-forwarded-for"),
+    c.req.header("x-real-ip")
+  );
+}
 
 function githubStateCookieOptions() {
   return {

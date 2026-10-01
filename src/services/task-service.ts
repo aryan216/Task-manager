@@ -15,6 +15,7 @@ import {
   toTask,
 } from "@/lib/serializers";
 import { ServiceError } from "@/lib/service-error";
+import { bumpAnalyticsVersion } from "@/services/analytics-service";
 import { getMember } from "@/services/member-service";
 
 export type PopulatedTask = TaskDocument & {
@@ -129,6 +130,7 @@ export async function createTask(
     },
   });
 
+  await bumpAnalyticsVersion(task.workspaceId);
   return toTask(task);
 }
 
@@ -170,6 +172,10 @@ export async function updateTask(
     },
   });
 
+  await bumpAnalyticsVersion(existing.workspaceId);
+  if (task.workspaceId !== existing.workspaceId) {
+    await bumpAnalyticsVersion(task.workspaceId);
+  }
   return toTask(task);
 }
 
@@ -181,6 +187,7 @@ export async function deleteTask(taskId: string, userId: string) {
 
   await requireMember(task.workspaceId, userId);
   await prisma.task.delete({ where: { id: taskId } });
+  await bumpAnalyticsVersion(task.workspaceId);
   return { $id: task.id };
 }
 
@@ -220,6 +227,7 @@ export async function bulkUpdateTasks(
     )
   );
 
+  await bumpAnalyticsVersion(workspaceId);
   return updated.map(toTask);
 }
 

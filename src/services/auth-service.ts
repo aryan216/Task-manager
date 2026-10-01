@@ -4,11 +4,20 @@ import { randomBytes } from "node:crypto";
 
 import { Prisma } from "@prisma/client";
 
+import { z } from "zod";
+
 import { prisma } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/password";
+import { getRedis, RedisConfigError } from "@/lib/redis";
 import { SESSION_MAX_AGE_SECONDS } from "@/lib/session-cookie";
 import { ServiceError } from "@/lib/service-error";
 import { SessionUser, toSessionUser } from "@/lib/serializers";
+
+const sessionUserSchema = z.object({
+  $id: z.string(),
+  name: z.string(),
+  email: z.string(),
+});
 
 export async function registerUser(input: {
   name: string;
@@ -30,8 +39,9 @@ export async function registerUser(input: {
     },
   });
 
-  const token = await createSession(user.id);
-  return { token, user: toSessionUser(user) };
+  const sessionUser = toSessionUser(user);
+  const token = await createSession(sessionUser);
+  return { token, user: sessionUser };
 }
 
 export async function loginUser(input: {
@@ -49,8 +59,9 @@ export async function loginUser(input: {
     throw new ServiceError("Invalid email or password", 401);
   }
 
-  const token = await createSession(user.id);
-  return { token, user: toSessionUser(user) };
+  const sessionUser = toSessionUser(user);
+  const token = await createSession(sessionUser);
+  return { token, user: sessionUser };
 }
 
 export async function loginWithGithub(input: {
@@ -76,8 +87,9 @@ export async function loginWithGithub(input: {
       });
     }
 
-    const token = await createSession(existing.id);
-    return { token, user: toSessionUser(existing) };
+    const sessionUser = toSessionUser(existing);
+    const token = await createSession(sessionUser);
+    return { token, user: sessionUser };
   }
 
   try {
@@ -88,8 +100,9 @@ export async function loginWithGithub(input: {
         githubId: input.githubId,
       },
     });
-    const token = await createSession(user.id);
-    return { token, user: toSessionUser(user) };
+    const sessionUser = toSessionUser(user);
+    const token = await createSession(sessionUser);
+    return { token, user: sessionUser };
   } catch (error) {
     if (!isUniqueConflict(error)) {
       throw error;
@@ -100,33 +113,41 @@ export async function loginWithGithub(input: {
       throw new ServiceError("Could not sign in with GitHub", 409);
     }
 
-    const token = await createSession(raced.id);
-    return { token, user: toSessionUser(raced) };
+    const sessionUser = toSessionUser(raced);
+    const token = await createSession(sessionUser);
+    return { token, user: sessionUser };
   }
 }
 
 export async function logoutUser(token: string): Promise<void> {
+  await removeCachedSession(token, true);
   await prisma.session.deleteMany({ where: { token } });
 }
 
 export async function getUserFromToken(
   token: string
 ): Promise<SessionUser | null> {
+  const cached = await readCachedSession(token);
+  if (cached) {
+    return cached;
+  }
+
   const session = await prisma.session.findUnique({
     where: { token },
     include: { user: true },
   });
 
-  if (!session) {
+  if (!session || session.expiresAt.getTime() <= Date.now()) {
+    if (session) {
+      await prisma.session.delete({ where: { id: session.id } });
+    }
+    await removeCachedSession(token, false);
     return null;
   }
 
-  if (session.expiresAt.getTime() <= Date.now()) {
-    await prisma.session.delete({ where: { id: session.id } });
-    return null;
-  }
-
-  return toSessionUser(session.user);
+  const user = toSessionUser(session.user);
+  await writeCachedSession(token, user, session.expiresAt);
+  return user;
 }
 
 async function findGithubUser(githubId: string, email: string) {
@@ -145,14 +166,65 @@ function isUniqueConflict(error: unknown): boolean {
   );
 }
 
-async function createSession(userId: string): Promise<string> {
+function sessionKey(token: string) {
+  return `session:${token}`;
+}
+
+async function readCachedSession(token: string): Promise<SessionUser | null> {
+  try {
+    const value = await getRedis().get(sessionKey(token));
+    const parsed = sessionUserSchema.safeParse(value);
+    return parsed.success ? parsed.data : null;
+  } catch (error) {
+    if (error instanceof RedisConfigError) {
+      throw error;
+    }
+    return null;
+  }
+}
+
+async function writeCachedSession(
+  token: string,
+  user: SessionUser,
+  expiresAt: Date
+) {
+  const ttl = Math.floor((expiresAt.getTime() - Date.now()) / 1000);
+  if (ttl < 1) {
+    return;
+  }
+
+  try {
+    await getRedis().set(sessionKey(token), user, { ex: ttl });
+  } catch (error) {
+    if (error instanceof RedisConfigError) {
+      throw error;
+    }
+  }
+}
+
+async function removeCachedSession(token: string, required: boolean) {
+  try {
+    await getRedis().del(sessionKey(token));
+  } catch (error) {
+    if (error instanceof RedisConfigError) {
+      throw error;
+    }
+    if (required) {
+      throw new ServiceError("Could not sign out", 503);
+    }
+  }
+}
+
+async function createSession(user: SessionUser): Promise<string> {
   const token = randomBytes(32).toString("hex");
+  const expiresAt = new Date(Date.now() + SESSION_MAX_AGE_SECONDS * 1000);
   await prisma.session.create({
     data: {
       token,
-      userId,
-      expiresAt: new Date(Date.now() + SESSION_MAX_AGE_SECONDS * 1000),
+      userId: user.$id,
+      expiresAt,
     },
   });
+  await writeCachedSession(token, user, expiresAt);
   return token;
 }

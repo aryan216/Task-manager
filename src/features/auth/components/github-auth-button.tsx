@@ -11,6 +11,7 @@ const GITHUB_AUTH_ERRORS: Record<string, string> = {
     "GitHub did not share a verified email. Verify an email on GitHub, then try again.",
   github_state: "GitHub sign-in expired. Try again.",
   github_config: "GitHub sign-in is not configured yet.",
+  github_rate_limit: "Too many attempts. Try again later.",
   github: "Could not sign in with GitHub.",
 };
 
