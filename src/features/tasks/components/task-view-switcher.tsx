@@ -59,7 +59,7 @@ export const TaskViewSwitcher = ({
     <Tabs
       defaultValue={view}
       onValueChange={setView}
-      className=" flex-1 w-full border rounded-lg"
+      className="w-full flex-1 rounded-2xl border bg-card"
     >
       <div className=" h-full flex flex-col overflow-auto p-4">
         <div className=" flex flex-col gap-y-2 lg:flex-row justify-between items-center">

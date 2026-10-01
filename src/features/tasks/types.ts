@@ -1,4 +1,5 @@
-import { Models } from "node-appwrite";
+import { Member } from "@/features/members/types";
+import { Project } from "@/features/projects/types";
 
 export enum TaskStatus {
   TODO = "TODO",
@@ -8,12 +9,18 @@ export enum TaskStatus {
   IN_PROGRESS = "IN_PROGRESS",
 }
 
-export type Task = Models.Document & {
+export type Task = {
+  $id: string;
+  $createdAt: string;
+  $updatedAt: string;
   name: string;
   dueDate: string;
   position: number;
   projectId: string;
-  assingeeId: string;
+  assigneeId: string;
   workspaceId: string;
   status: TaskStatus;
+  description: string;
+  project: Project;
+  assignee: Member;
 };

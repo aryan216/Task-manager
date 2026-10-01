@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
@@ -21,7 +19,7 @@ export const ProjectAvatar = ({
       <div
         className={cn(" size-5 relative rounded-md overflow-hidden", className)}
       >
-        <Image src={image} alt={name} fill className=" object-cover" />
+        <img src={image} alt={name} className="absolute inset-0 h-full w-full object-cover" />
       </div>
     );
   }

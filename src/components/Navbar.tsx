@@ -6,20 +6,20 @@ import MobileSidebar from "./mobile-sidebar";
 import { usePathname } from "next/navigation";
 
 const pathnameMap = {
-  "tasks": {
-    title: "My Tasks",
-    description: "View all of your tasks here"
+  tasks: {
+    title: "Tasks",
+    description: "Everything assigned across this workspace.",
   },
-  "projects": {
-    title: "My Project",
-    description: "View tasks of your projects here"
-  }
-}
+  projects: {
+    title: "Project",
+    description: "Work living inside this project.",
+  },
+};
 
 const defaultMap = {
   title: "Home",
-  description: "Monitor all of your projects and tasks here"
-}
+  description: "A quiet view of what needs attention.",
+};
 
 export const Navbar = () => {
 
@@ -30,12 +30,10 @@ export const Navbar = () => {
   const { title, description } = pathnameMap[pathnameKey] || defaultMap;
 
   return (
-    <nav className=" pt-4 px-6 flex items-center justify-between">
-      <div className=" flex-col hidden lg:flex">
-        <h1 className=" text-2xl font-semibold">{title}</h1>
-        <p className=" text-muted-foreground">
-          {description}
-        </p>
+    <nav className="flex items-center justify-between px-6 pt-6">
+      <div className="hidden flex-col gap-1 lg:flex">
+        <h1 className="text-[22px] font-semibold tracking-[-0.03em]">{title}</h1>
+        <p className="text-sm text-muted-foreground">{description}</p>
       </div>
       <MobileSidebar />
       <UserButton />

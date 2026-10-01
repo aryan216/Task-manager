@@ -1,7 +1,6 @@
 "use client";
 import { z } from "zod";
 import { useRef } from "react";
-import Image from "next/image";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
@@ -135,7 +134,7 @@ export const EditWorkspaceForm = ({
             onClick={
               onCancel
                 ? onCancel
-                : () => router.push(`/workspaces/${initialValues.$id}}`)
+                : () => router.push(`/workspaces/${initialValues.$id}`)
             }
           >
             <ArrowLeftIcon className=" size-4" />
@@ -173,15 +172,14 @@ export const EditWorkspaceForm = ({
                       <div className=" flex items-center gap-x-5">
                         {field.value ? (
                           <div className=" size-[72px] relative rounded-md overflow-hidden">
-                            <Image
+                            <img
                               src={
                                 field.value instanceof File
                                   ? URL.createObjectURL(field.value)
                                   : field.value
                               }
                               alt="Logo"
-                              fill
-                              className=" object-cover"
+                              className="absolute inset-0 h-full w-full object-cover"
                             />
                           </div>
                         ) : (

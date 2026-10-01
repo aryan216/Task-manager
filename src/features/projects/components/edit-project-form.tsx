@@ -1,7 +1,6 @@
 "use client";
 import { z } from "zod";
 import { useRef } from "react";
-import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { ArrowLeftIcon, ImageIcon } from "lucide-react";
@@ -108,7 +107,7 @@ export const EditProjectForm = ({
                 ? onCancel
                 : () =>
                   router.push(
-                    `/workspaces/${initialValues.workspaceId}/projects/${initialValues.$id}}`
+                    `/workspaces/${initialValues.workspaceId}/projects/${initialValues.$id}`
                   )
             }
           >
@@ -147,15 +146,14 @@ export const EditProjectForm = ({
                       <div className=" flex items-center gap-x-5">
                         {field.value ? (
                           <div className=" size-[72px] relative rounded-md overflow-hidden">
-                            <Image
+                            <img
                               src={
                                 field.value instanceof File
                                   ? URL.createObjectURL(field.value)
                                   : field.value
                               }
                               alt="Logo"
-                              fill
-                              className=" object-cover"
+                              className="absolute inset-0 h-full w-full object-cover"
                             />
                           </div>
                         ) : (

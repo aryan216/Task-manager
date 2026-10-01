@@ -1,6 +1,8 @@
 import { useParams } from "next/navigation";
 
+import { cleanRouteId } from "@/lib/utils";
+
 export const useTaskId = () => {
   const params = useParams();
-  return params.taskId as string;
+  return cleanRouteId(params.taskId);
 };

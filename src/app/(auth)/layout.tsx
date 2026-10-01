@@ -1,8 +1,10 @@
 "use client";
-import { Button } from "@/components/ui/button";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React from "react";
+
+import { BrandMark } from "@/components/brand-mark";
+import { Button } from "@/components/ui/button";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -10,18 +12,19 @@ interface AuthLayoutProps {
 
 const AuthLayout = ({ children }: AuthLayoutProps) => {
   const pathName = usePathname();
+
   return (
-    <main className=" bg-neutral-100 min-h-screen">
-      <div className=" mx-auto max-w-screen-2xl p-4">
-        <nav className=" flex justify-between items-center">
-          <img src="/ProManage.png" alt="logo" className=" w-52 h-16" />
-          <Button asChild variant={"secondary"}>
+    <main className="min-h-dvh bg-background">
+      <div className="mx-auto flex min-h-dvh max-w-lg flex-col px-6 py-8">
+        <nav className="flex items-center justify-between">
+          <BrandMark />
+          <Button asChild variant="secondary" size="sm">
             <Link href={pathName === "/sign-in" ? "/sign-up" : "/sign-in"}>
-              {pathName === "/sign-in" ? "Sign Up" : "Login"}
+              {pathName === "/sign-in" ? "Create account" : "Sign in"}
             </Link>
           </Button>
         </nav>
-        <div className=" flex flex-col items-center justify-center pt-4 md:pt-14">
+        <div className="flex flex-1 flex-col items-center justify-center py-10">
           {children}
         </div>
       </div>

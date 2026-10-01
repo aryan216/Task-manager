@@ -17,13 +17,13 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       <CreateTaskModal />
       <EditTaskModal />
       <div className=" flex w-full h-full">
-        <div className=" fixed left-0 top-0 hidden lg:block lg:w-[264px] h-full overflow-y-auto">
+        <div className="fixed left-0 top-0 hidden h-full w-[248px] overflow-y-auto lg:block">
           <Sidebar />
         </div>
-        <div className=" lg:pl-[264px] w-full">
-          <div className=" mx-auto max-w-screen-2xl h-full">
+        <div className="w-full lg:pl-[248px]">
+          <div className="mx-auto h-full max-w-6xl">
             <Navbar />
-            <main className=" h-full py-8 px-6 flex flex-col">{children}</main>
+            <main className="flex h-full flex-col px-6 py-8">{children}</main>
           </div>
         </div>
       </div>

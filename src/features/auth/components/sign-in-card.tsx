@@ -2,20 +2,14 @@
 
 import { z } from "zod";
 import Link from "next/link";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useForm } from "react-hook-form";
-import { FcGoogle } from "react-icons/fc";
-import { FaGithub } from "react-icons/fa";
 import { Eye, EyeOff } from "lucide-react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { signUpWithGithub, signUpWithGoogle } from "@/lib/oauth";
-
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { DottedSeparator } from "@/components/dotted-separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
@@ -27,6 +21,7 @@ import {
 
 import { loginSchema } from "../Schemas";
 import { useLogin } from "../api/use-login";
+import { GithubAuthButton, GithubAuthError } from "./github-auth-button";
 
 export const SignInCard = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -45,17 +40,22 @@ export const SignInCard = () => {
   };
 
   return (
-    <Card className=" w-full h-full md:w-[487px] border border-neutral-700 shadow-none">
-      <CardHeader className=" flex justify-center items-center text-center p-7">
-        <CardTitle className=" text-2xl">Welcome Back</CardTitle>
+    <Card className="w-full border-border bg-card shadow-none md:w-[420px]">
+      <CardHeader className="items-center px-7 pb-2 pt-8 text-center">
+        <CardTitle className="text-[28px] font-semibold tracking-[-0.04em]">
+          Welcome back
+        </CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Sign in to your Alder workspace.
+        </p>
       </CardHeader>
-      <div className=" px-7 mb-2">
-        <Separator />
-        <DottedSeparator />
-      </div>
-      <CardContent className=" mt-8">
+      <CardContent className="px-7 pb-8 pt-4">
+        <Suspense fallback={null}>
+          <GithubAuthError />
+        </Suspense>
+        <GithubAuthButton />
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="mt-4 space-y-4">
             <FormField
               name="email"
               control={form.control}
@@ -90,7 +90,8 @@ export const SignInCard = () => {
                       variant={"secondary"}
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className=" absolute right-1"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      className="absolute right-1"
                     >
                       {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
                     </Button>
@@ -103,40 +104,10 @@ export const SignInCard = () => {
             </Button>
           </form>
         </Form>
-      </CardContent>
-      <div className=" px-7">
-        <DottedSeparator />
-      </div>
-      <CardContent className=" p-7 flex flex-col gap-y-4">
-        <Button
-          onClick={() => signUpWithGoogle()}
-          disabled={isPending}
-          variant={"secondary"}
-          size={"lg"}
-          className=" w-full"
-        >
-          <FcGoogle className=" mr-2 size-5" />
-          Login with Google
-        </Button>
-        <Button
-          onClick={() => signUpWithGithub()}
-          disabled={isPending}
-          variant={"secondary"}
-          size={"lg"}
-          className=" w-full"
-        >
-          <FaGithub className=" mr-2 size-5" />
-          Login with Github
-        </Button>
-      </CardContent>
-      <div className=" px-7">
-        <DottedSeparator />
-      </div>
-      <CardContent className=" p-7 flex items-center justify-center">
-        <p>
-          Don&apos;t have an account ?{" "}
-          <Link href="/sign-up">
-            <span className=" text-blue-700">Sign Up</span>
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          New here?{" "}
+          <Link href="/sign-up" className="font-medium text-foreground underline-offset-4 hover:underline">
+            Create an account
           </Link>
         </p>
       </CardContent>

@@ -1,53 +1,32 @@
 import "server-only";
+
+import { HTTPException } from "hono/http-exception";
 import { getCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
 
 import { AUTH_COOKIE } from "@/features/auth/constants";
-import {
-  Account,
-  Storage as AppwriteStorage,
-  Client,
-  Databases,
-  Models,
-  type Account as AccountType,
-  type Databases as DatabasesType,
-  type Users as UsersType,
-} from "node-appwrite";
+import { SessionUser } from "@/lib/serializers";
+import { getUserFromToken } from "@/services/auth-service";
 
 type AdditionalContext = {
   Variables: {
-    account: AccountType;
-    databases: DatabasesType;
-    storage: AppwriteStorage;
-    users: UsersType;
-    user: Models.User<Models.Preferences>;
+    user: SessionUser;
   };
 };
 
 export const sessionMiddleware = createMiddleware<AdditionalContext>(
   async (c, next) => {
-    const client = new Client()
-      .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
-      .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT!);
-
-    const session = getCookie(c, AUTH_COOKIE);
-    if (!session) {
-      return c.json({ error: "Unauthorized" }, 401);
+    const token = getCookie(c, AUTH_COOKIE);
+    if (!token) {
+      throw new HTTPException(401, { message: "Unauthorized" });
     }
 
-    client.setSession(session);
+    const user = await getUserFromToken(token);
+    if (!user) {
+      throw new HTTPException(401, { message: "Unauthorized" });
+    }
 
-    const account = new Account(client);
-    const databases = new Databases(client);
-    const storage = new AppwriteStorage(client);
-
-    const user = await account.get();
-
-    c.set("account", account);
-    c.set("databases", databases);
-    c.set("storage", storage);
     c.set("user", user);
-
     await next();
   }
 );

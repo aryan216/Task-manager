@@ -19,11 +19,11 @@ export const AnalyticsCard = ({ title, value, variant, increaseValue }: Analytic
     const Icon = variant === "up" ? FaCaretUp : FaCaretDown;
 
     return (
-        <Card className=" shadow-none border-none w-full">
-            <CardHeader>
+        <Card className="w-full border-none bg-transparent shadow-none">
+            <CardHeader className="gap-2 p-5">
                 <div className=" flex items-center gap-x-2.5">
-                    <CardDescription className=" flex items-center gap-x-2 font-medium overflow-hidden">
-                        <span className=" truncate text-base">{title}</span>
+                    <CardDescription className=" flex items-center gap-x-2 overflow-hidden">
+                        <span className=" truncate text-sm">{title}</span>
                     </CardDescription>
                     <div className=" flex items-center gap-x-1">
                         <Icon className={cn(iconColor, "size-4")} />
@@ -32,7 +32,7 @@ export const AnalyticsCard = ({ title, value, variant, increaseValue }: Analytic
                         </span>
                     </div>
                 </div>
-                <CardTitle className=" text-3xl font-semibold">{value}</CardTitle>
+                <CardTitle className="text-[28px] font-semibold tracking-[-0.04em]">{value}</CardTitle>
             </CardHeader>
         </Card>
     )

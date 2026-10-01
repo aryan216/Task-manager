@@ -1,43 +1,17 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { SettingsIcon, UsersIcon } from "lucide-react";
-import {
-  GoHome,
-  GoHomeFill,
-  GoCheckCircle,
-  GoCheckCircleFill,
-} from "react-icons/go";
+import { usePathname } from "next/navigation";
+import { CheckCircle2, Home, Settings, Users } from "lucide-react";
 
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { cn } from "@/lib/utils";
 
 const routes = [
-  {
-    label: "Home",
-    href: "",
-    icon: GoHome,
-    activeIcon: GoHomeFill,
-  },
-  {
-    label: "My Tasks",
-    href: "/tasks",
-    icon: GoCheckCircle,
-    activeIcon: GoCheckCircleFill,
-  },
-  {
-    label: "Settings",
-    href: "/settings",
-    icon: SettingsIcon,
-    activeIcon: SettingsIcon,
-  },
-  {
-    label: "Members",
-    href: "/members",
-    icon: UsersIcon,
-    activeIcon: UsersIcon,
-  },
+  { label: "Home", href: "", icon: Home },
+  { label: "Tasks", href: "/tasks", icon: CheckCircle2 },
+  { label: "Members", href: "/members", icon: Users },
+  { label: "Settings", href: "/settings", icon: Settings },
 ];
 
 export const Navigation = () => {
@@ -45,26 +19,27 @@ export const Navigation = () => {
   const pathname = usePathname();
 
   return (
-    <ul className=" flex flex-col">
+    <nav aria-label="Workspace" className="flex flex-col gap-0.5">
       {routes.map((item) => {
         const fullHref = `/workspaces/${workspaceId}${item.href}`;
         const isActive = pathname === fullHref;
-        const Icon = isActive ? item.activeIcon : item.icon;
+        const Icon = item.icon;
 
         return (
-          <Link key={item.href} href={fullHref}>
-            <div
-              className={cn(
-                " flex items-center gap-2.5 p-2.5 rounded-md font-medium hover:text-primary transition text-neutral-500",
-                isActive && " bg-white shadow-sm hover:opacity-100 text-primary"
-              )}
-            >
-              <Icon className=" size-5 text-neutral-500" />
-              {item.label}
-            </div>
+          <Link
+            key={item.href}
+            href={fullHref}
+            aria-current={isActive ? "page" : undefined}
+            className={cn(
+              "flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-sm text-muted-foreground transition-colors duration-200 hover:bg-accent hover:text-foreground",
+              isActive && "bg-accent font-medium text-foreground"
+            )}
+          >
+            <Icon className="size-4" />
+            {item.label}
           </Link>
         );
       })}
-    </ul>
+    </nav>
   );
 };

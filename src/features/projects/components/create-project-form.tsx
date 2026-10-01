@@ -4,8 +4,6 @@ import { useForm } from "react-hook-form";
 import { useRef } from "react";
 import { ImageIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DottedSeparator } from "@/components/dotted-separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -105,15 +103,14 @@ export const CreateProjectForm = ({ onCancel }: CreateProjectFormProps) => {
                     <div className=" flex items-center gap-x-5">
                       {field.value ? (
                         <div className=" size-[72px] relative rounded-md overflow-hidden">
-                          <Image
+                          <img
                             src={
                               field.value instanceof File
                                 ? URL.createObjectURL(field.value)
                                 : field.value
                             }
                             alt="Logo"
-                            fill
-                            className=" object-cover"
+                            className="absolute inset-0 h-full w-full object-cover"
                           />
                         </div>
                       ) : (

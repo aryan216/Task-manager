@@ -10,10 +10,11 @@
 
 - Used tanstack query with Hono js for end to end tyepsafety such as if you are writing axios.post('/foo/${abc}'), then it will highlight whether the route 'foo' exists or not.
 
-# Appwrite
+# Postgres
 
-- Used appwrite for creating user and storing other data.
-- Used server-only package to keep the keys and other tokens safe, you just have to write "import server-only" on the top of the page and it will convert that page to server side page.
+- Users, sessions, workspaces, members, projects, and tasks are stored in Postgres through Prisma.
+- Passwords are hashed before they are saved. Sessions live in the database and are sent as an httpOnly cookie.
+- Workspace and project images are uploaded to ImageKit. The URL endpoint and private key live in `.env`.
 
 # server-only (npm package)
 
@@ -44,7 +45,6 @@
 
 - getData?.()
 
-### Date (issue) in Appwrite
+### Dates
 
-Appwrite stores the date in UTC(Coordinated Universal Time) which is different from IST & GMT.
-To calculate the correct IST we should add 5:30 to UTC as IST is equals to GMT +5:30
+Task due dates are stored in Postgres as timestamps. The app compares them in UTC.

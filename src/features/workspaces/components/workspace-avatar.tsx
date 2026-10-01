@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
@@ -22,14 +20,14 @@ export const WorkspaceAvatar = ({
                     className
                 )}
             >
-                <Image src={image} alt={name} fill className=" object-cover" />
+                <img src={image} alt={name} className="absolute inset-0 h-full w-full object-cover" />
             </div>
         );
     }
 
     return (
         <Avatar className={cn(" size-10 rounded-md", className)}>
-            <AvatarFallback className=" text-white bg-blue-600 font-semibold text-lg uppercase rounded-md">
+            <AvatarFallback className="rounded-md bg-foreground text-xs font-medium uppercase text-background">
                 {name[0]}
             </AvatarFallback>
         </Avatar>

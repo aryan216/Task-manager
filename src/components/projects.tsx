@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { RiAddCircleFill } from "react-icons/ri";
+import { Plus } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useGetProjects } from "@/features/projects/api/use-get-projects";
@@ -17,13 +17,17 @@ export const Projects = () => {
   const { data } = useGetProjects({ workspaceId });
 
   return (
-    <div className=" flex flex-col gap-y-2">
-      <div className="flex items-center justify-between">
-        <p className=" text-xs uppercase text-neutral-500 ">Projects</p>
-        <RiAddCircleFill
+    <div className=" flex flex-col gap-0.5">
+      <div className="flex items-center justify-between px-2">
+        <p className=" text-[11px] font-medium tracking-wide text-muted-foreground">Projects</p>
+        <button
+          type="button"
           onClick={() => open()}
-          className=" size-5 text-neutral-500 cursor-pointer hover:opacity-75 transition"
-        />
+          aria-label="Create project"
+          className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        >
+          <Plus className="size-4" />
+        </button>
       </div>
       {data?.documents.map((project) => {
         const href = `/workspaces/${workspaceId}/projects/${project.$id}`;
@@ -33,8 +37,8 @@ export const Projects = () => {
           <Link href={href} key={project.$id}>
             <div
               className={cn(
-                " flex items-center gap-2.5 p-2.5 rounded-md hover:opacity-75 transition cursor-pointer text-neutral-500",
-                isActive && " bg-white shadow-sm hover:opacity-100 text-primary"
+                " flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-sm text-muted-foreground transition-colors duration-200 hover:bg-accent hover:text-foreground",
+                isActive && " bg-accent font-medium text-foreground"
               )}
             >
               <ProjectAvatar image={project.imageUrl} name={project.name} />

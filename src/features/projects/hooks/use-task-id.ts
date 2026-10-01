@@ -1,7 +1,8 @@
 import { useParams } from "next/navigation";
 
-export const useProjectId = () => {
-    const params = useParams();
+import { cleanRouteId } from "@/lib/utils";
 
-    return params.projectId as string;
+export const useProjectId = () => {
+  const params = useParams();
+  return cleanRouteId(params.projectId);
 };

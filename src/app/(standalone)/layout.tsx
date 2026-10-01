@@ -1,33 +1,22 @@
-import Image from "next/image";
-import Link from "next/link";
-
+import { BrandMark } from "@/components/brand-mark";
 import { UserButton } from "@/features/auth/components/user-button";
 
 interface StandAloneLayoutProps {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }
 
 const StandAloneLayout = ({ children }: StandAloneLayoutProps) => {
-    return (
-        <main className=" bg-neutral-100 min-h-screen">
-            <div className=" mx-auto max-w-screen-2xl p-4">
-                <nav className=" flex justify-between items-center h-[73px]">
-                    <Link href="/">
-                        <Image
-                            src="/ProManage.png"
-                            alt="Logo"
-                            height={70}
-                            width={220}
-                        />
-                    </Link>
-                    <UserButton />
-                </nav>
-                <div className=" flex flex-col items-center justify-center py-4">
-                    {children}
-                </div>
-            </div>
-        </main>
-    );
+  return (
+    <main className="min-h-dvh bg-background">
+      <div className="mx-auto max-w-3xl px-6 py-6">
+        <nav className="flex h-14 items-center justify-between">
+          <BrandMark />
+          <UserButton />
+        </nav>
+        <div className="flex flex-col items-center py-8">{children}</div>
+      </div>
+    </main>
+  );
 };
 
 export default StandAloneLayout;
