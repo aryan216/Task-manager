@@ -1,50 +1,80 @@
-#### Tech Stack used
+# Alder
 
-# Hono js
+Alder is a workspace for projects, people, and tasks. A team gets a workspace, splits work into projects, and tracks each task on a table, a kanban board, or a calendar.
 
-- Used to create APIs, it is used due to its fast and ultra-lightweight nature and also the optimization for serverless environments such as vercel and cludeflare.
-- It supports global middleware, and also id does not require to wrap the middleware on the route just like nextjs.
-- Unlike Nextjs we can write our Api routes outside of API folder in hono.
+It is a Next.js app. The interesting part is not the board itself. It is how a request is checked, stored, and cached so the same patterns hold when the product grows.
 
-# Tanstack Query
+## What you can do
 
-- Used tanstack query with Hono js for end to end tyepsafety such as if you are writing axios.post('/foo/${abc}'), then it will highlight whether the route 'foo' exists or not.
+- Create an account with email and password, or with GitHub.
+- Open a workspace, invite people with a link, and give them an admin or member role.
+- Add projects, attach a cover image, and assign tasks with a status, a due date, and a person.
+- Switch a task list between table, kanban, and calendar. Filters live in the URL, so a view can be shared.
+- See how many tasks were created, completed, assigned, or left overdue this month compared with last month.
 
-# Postgres
+Admins manage the workspace. Members can work on projects and tasks. You cannot remove the last person in a workspace, and someone who still has tasks assigned to them has to be reassigned first.
 
-- Users, sessions, workspaces, members, projects, and tasks are stored in Postgres through Prisma.
-- Passwords are hashed before they are saved. Sessions live in the database and are sent as an httpOnly cookie.
-- Workspace and project images are uploaded to ImageKit. The URL endpoint and private key live in `.env`.
+## Why it is built this way
 
-# server-only (npm package)
+Postgres is the record of users, sessions, workspaces, and tasks. If Redis is down, a session can still be read from Postgres, and sign-in still works. Redis only remembers things that are safe to lose: the session user for the next request, a 60-second copy of the analytics counts, and the counters that rate-limit login, registration, and the GitHub callback.
 
-- It is used to convert the page to server side page, inspite of default server page behaviour of next js, it is used because if you write "import server-only" on top of a page then it will create it as a server page, and it will also give error if you import it in a client side page.
+Passwords are hashed with scrypt. The session token sits in an httpOnly cookie, not in local storage. GitHub sign-in asks for the user's profile and email, and it will only create or link an account when GitHub says that email is verified. If someone already registered with that email, the GitHub identity is attached to the existing user.
 
-# useMedia (react-use package)
+Workspace and project images go to ImageKit. The database stores the URL. Putting the file bytes in Postgres made every avatar read a database query.
 
-- This package is generally used to create responsive media screens such as for a mobile screen you want a dialog box and for a desktop screen you want a drawer and that can be achieved using this package
+The browser does not talk to the database. A page or a Hono route validates the input, checks the session, and calls a service. The service is where membership, roles, and task rules live. Hono is mounted at `/api` and the React Query hooks call it through a typed client, so a renamed route shows up as a type error in the hook that calls it.
 
-# nuqs (package)
+Modal state and task filters use the query string (`nuqs`) instead of a global store. Opening "create task" is a URL, which makes the back button and a shared link behave.
 
-- Instead of using tools like justand and redux for managing not-so-important global states such as opening and closing modals, we can use this package for that by adding the states in url only so that you can directly open a modal just by sending the url
+## Stack
 
-# RPC & gRPC
+- Next.js App Router and React for the UI
+- Hono and Zod for the API
+- TanStack Query for client reads and mutations
+- Prisma and Postgres for data
+- Upstash Redis for session cache, analytics cache, and rate limits
+- ImageKit for uploaded images
+- Tailwind CSS and Radix UI for the interface
 
-- RPC in this project is used for better coupling and typesafe api (due to its inference of type)
-- gRPC format is widely adopted due to two reasons, first one is the use of ProtoBuf (protocol buffers data type instead of json which is a strongly typed data type and is much faster than json), and second is the gRPC is built on top of HTTP/2 to provide a high-performance foundation at scale.
+## Run it locally
 
-# Developer Tools - Performance Tab
+You need Node.js 20 or newer, a Postgres database, an ImageKit account, a GitHub OAuth app, and an Upstash Redis database. Postgres can be Neon, or the local database in `docker-compose.yml`.
 
-##### Interaction to Next Paint (INP) - It measures the time it takes from the user initiating an interaction (like a click or tap) to the next significant screen update that results from that interaction.
+```bash
+docker compose up -d
+npm install
+cp .env.example .env
+npx prisma migrate deploy
+npm run dev
+```
 
-##### Cumulative Layout Shift (CLS) - It measures the total amount of unexpected layout shifts that occur while a page is loading. Layout shifts happen when elements on the page move from one position to another
+The app runs at `http://localhost:3000`. `NEXT_PUBLIC_APP_URL` has to be that same origin. The GitHub OAuth callback is `{NEXT_PUBLIC_APP_URL}/api/auth/github/callback`.
 
-##### Largest Contentful Paint (LCP) - It measures the time it takes for the largest visible content element (such as an image, video, or block of text) to load and become visible within the viewport. Essentially, LCP gauges how long it takes for the main content of a page to load and appear to the user.
+If you use the compose file, the database URL is:
 
-#### Optional execution of Functions
+```
+postgresql://postgres:postgres@localhost:5432/jeera
+```
 
-- getData?.()
+## Environment
 
-### Dates
+Copy `.env.example` to `.env`. Do not commit `.env`.
 
-Task due dates are stored in Postgres as timestamps. The app compares them in UTC.
+| Variable | Why it is there |
+| --- | --- |
+| `DATABASE_URL` | Postgres connection string. Users, sessions, and tasks live here. |
+| `NEXT_PUBLIC_APP_URL` | Public origin of this app. The API client and the GitHub redirect use it. |
+| `IMAGEKIT_URL_ENDPOINT` | ImageKit URL, such as `https://ik.imagekit.io/your_imagekit_id`. |
+| `IMAGEKIT_PRIVATE_KEY` | Server-side upload key. Never expose this in the browser. |
+| `GITHUB_CLIENT_ID` | GitHub OAuth app client id. |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth app secret. |
+| `UPSTASH_REDIS_REST_URL` | Upstash Redis REST endpoint. |
+| `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis token. |
+
+## Scripts
+
+- `npm run dev` starts the app.
+- `npm run build` generates the Prisma client and builds Next.js.
+- `npm run lint` runs ESLint.
+- `npm run db:migrate` creates a new Prisma migration while developing.
+- `npx prisma migrate deploy` applies the migrations that are already in the repo.
